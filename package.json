@@ -1,0 +1,20 @@
+{
+  "name": "reown-deployer",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^7.0.0"
+  },
+  "dependencies": {
+    "@reown/walletkit": "^1.2.8",
+    "@walletconnect/core": "^2.21.4",
+    "@walletconnect/utils": "^2.21.4",
+    "ethers": "^6.15.0"
+  }
+}
