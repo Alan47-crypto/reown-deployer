@@ -89,6 +89,8 @@ deployButton.addEventListener('click', async () => {
 
     if (!walletKit) {
       walletKit = await WalletKit.init({ core, metadata });
+
+      console.log('WalletKit object:', walletKit); 
     }
 
     statusDiv.innerText = 'Please confirm connection in your wallet...';
