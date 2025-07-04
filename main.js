@@ -84,22 +84,56 @@ let walletKit;
 // Add the main logic to our button
 deployButton.addEventListener('click', async () => {
   try {
-    statusDiv.innerText = 'Initializing WalletKit for debugging...';
+    statusDiv.innerText = 'Initializing WalletKit...';
     addressDiv.innerHTML = '';
     deployButton.disabled = true;
 
     if (!walletKit) {
       walletKit = await WalletKit.init({ core, metadata });
     }
+
+    // --- THIS IS THE FINAL, CORRECTED LOGIC ---
+    statusDiv.innerText = 'Please select a wallet from the pop-up...';
     
-    // The only purpose of this version is to log the object to the console.
-    console.log('WalletKit object:', walletKit);
+    // 1. Open the wallet selector modal and get the session
+    const session = await walletKit.prompt();
+    if (!session) {
+      throw new Error("User rejected wallet connection.");
+    }
     
-    statusDiv.innerText = 'Debug info logged to console. Please expand the object and send a screenshot.';
+    // 2. After the user connects, get the provider object
+    const walletProvider = await walletKit.getWalletProvider();
+    if (!walletProvider) {
+      throw new Error("Could not get wallet provider after connection.");
+    }
+    // --- END OF CORRECTION ---
+
+    // The rest of the logic can now proceed
+    const provider = new ethers.providers.Web3Provider(walletProvider);
+    const signer = provider.getSigner();
+    
+    // Check if on Sepolia Testnet
+    const { chainId } = await provider.getNetwork();
+    if (chainId !== 11155111) {
+        throw new Error("Please connect to the Sepolia Testnet in your wallet.");
+    }
+
+    statusDiv.innerText = '✅ Wallet Connected. Preparing deployment...';
+    
+    const factory = new ethers.ContractFactory(contractABI, contractBytecode, signer);
+    const contract = await factory.deploy();
+    
+    statusDiv.innerText = 'Deploying contract... This may take a minute.';
+    await contract.deployTransaction.wait();
+
+    statusDiv.innerText = '✅ Contract Deployed Successfully!';
+    const explorerLink = `https://sepolia.etherscan.io/address/${contract.address}`;
+    addressDiv.innerHTML = `Contract Address: <a href="${explorerLink}" target="_blank">${contract.address}</a>`;
+    deployButton.innerText = 'Deployed!';
 
   } catch (error) {
     console.error(error);
-    statusDiv.innerText = `Error during initialization: ${error.message}`;
+    statusDiv.innerText = `Error: ${error.message}`;
     deployButton.disabled = false;
   }
 });
